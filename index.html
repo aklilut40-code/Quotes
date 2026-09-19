@@ -1,1 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commonplace — a collection of quotes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #f4efe4;
+    --paper-2: #ece4d3;
+    --ink: #241f1a;
+    --ink-soft: #5b5347;
+    --line: #d9cfb9;
+    --plum: #6e2338;
+    --plum-soft: #8a3a4c;
+    --gold: #a3813f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(110,35,56,0.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(163,129,63,0.06), transparent 45%);
+  }
 
+  .frame{ max-width: 640px; margin: 0 auto; padding: 36px 24px 56px; min-height: 100vh; display: flex; flex-direction: column; }
+
+  header{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 34px; }
+  .wordmark{ font-family: 'Lora', serif; font-weight: 600; font-size: 1.3rem; letter-spacing: -0.01em; }
+  .wordmark em{ font-style: italic; color: var(--plum); }
+  .count{ font-size: 0.82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  .filters{ display:flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+  .chip{
+    font-family:'Inter'; font-size: 0.84rem; padding: 7px 15px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--ink-soft);
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .chip:hover{ border-color: var(--plum-soft); color: var(--ink); }
+  .chip.active{ background: var(--plum); border-color: var(--plum); color: var(--paper); }
+
+  .page{
+    flex: 1;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 52px 36px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 300px;
+    box-shadow: 0 1px 0 var(--line), 0 18px 34px -22px rgba(36,31,26,0.35);
+  }
+  .page::before{
+    content: "";
+    position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.55;
+  }
+  .quote-body{ opacity: 1; transition: opacity 0.22s ease; }
+  .quote-body.swap{ opacity: 0; }
+  .mark{ font-family: 'Lora', serif; font-size: 2.6rem; color: var(--plum); line-height: 0; display:block; margin-bottom: 4px; }
+  blockquote{
+    font-family: 'Lora', serif; font-style: italic; font-weight: 500;
+    font-size: clamp(1.3rem, 4.4vw, 1.7rem); line-height: 1.45; color: var(--ink);
+  }
+  .attribution{ margin-top: 22px; font-family: 'Inter'; font-size: 0.92rem; color: var(--ink-soft); }
+  .attribution span{ color: var(--gold); margin: 0 8px; }
+
+  .save-btn{
+    position: absolute; top: 20px; right: 22px; background: none; border: none; cursor: pointer;
+    font-size: 1.25rem; color: var(--line); transition: color 0.15s, transform 0.15s;
+    line-height: 1;
+  }
+  .save-btn.saved{ color: var(--plum); }
+  .save-btn:active{ transform: scale(0.9); }
+
+  .controls{ display:flex; align-items:center; justify-content: space-between; gap: 10px; margin-top: 22px; }
+  .nav-group{ display:flex; gap: 8px; }
+  .icon-btn{
+    width: 42px; height: 42px; border-radius: 999px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink); font-size: 1rem; cursor: pointer;
+    display:flex; align-items:center; justify-content:center; transition: all 0.15s ease;
+  }
+  .icon-btn:hover{ border-color: var(--plum-soft); background: rgba(110,35,56,0.06); }
+  .icon-btn:active{ transform: scale(0.94); }
+
+  .action-group{ display:flex; gap: 8px; }
+  .text-btn{
+    font-family: 'Inter'; font-size: 0.86rem; font-weight: 500; padding: 10px 18px;
+    border-radius: 999px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .text-btn:hover{ background: var(--plum); border-color: var(--plum); }
+  .text-btn.ghost{ background: transparent; color: var(--ink); border-color: var(--line); }
+  .text-btn.ghost:hover{ border-color: var(--plum-soft); color: var(--plum); background: none; }
+
+  .toast{
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: var(--ink); color: var(--paper); font-size: 0.86rem; padding: 10px 18px;
+    border-radius: 999px; opacity: 0; pointer-events: none; transition: all 0.25s ease;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .empty{ text-align:center; color: var(--ink-soft); font-size: 0.95rem; padding: 20px 0; }
+  .empty a{ color: var(--plum); cursor: pointer; text-decoration: underline; }
+
+  footer{ text-align:center; margin-top: 30px; font-size: 0.78rem; color: var(--ink-soft); }
+
+  @media (max-width: 480px){
+    .page{ padding: 40px 24px; }
+    .controls{ flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <header>
+    <div class="wordmark">common<em>place</em></div>
+    <div class="count" id="count"></div>
+  </header>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="page">
+    <button class="save-btn" id="saveBtn" aria-label="Save quote">♡</button>
+    <div class="quote-body" id="quoteBody">
+      <span class="mark">"</span>
+      <blockquote id="quoteText"></blockquote>
+      <div class="attribution"><span id="quoteAuthor"></span><span>·</span><span id="quoteCategory"></span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="nav-group">
+      <button class="icon-btn" id="prevBtn" aria-label="Previous">←</button>
+      <button class="icon-btn" id="shuffleBtn" aria-label="Random">⟲</button>
+      <button class="icon-btn" id="nextBtn" aria-label="Next">→</button>
+    </div>
+    <div class="action-group">
+      <button class="text-btn ghost" id="copyBtn">Copy</button>
+      <button class="text-btn" id="shareBtn">Share</button>
+    </div>
+  </div>
+
+  <footer>A small collection, kept for return visits.</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const quotes = [
+    { t: "The unexamined life is not worth living.", a: "Socrates", c: "Wisdom" },
+    { t: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", a: "Will Durant", c: "Success" },
+    { t: "It is not that we have a short time to live, but that we waste a lot of it.", a: "Seneca", c: "Wisdom" },
+    { t: "Whether you think you can, or you think you can't — you're right.", a: "Henry Ford", c: "Success" },
+    { t: "The only way to do great work is to love what you do.", a: "Steve Jobs", c: "Success" },
+    { t: "Not all those who wander are lost.", a: "J.R.R. Tolkien", c: "Life" },
+    { t: "In the middle of difficulty lies opportunity.", a: "Albert Einstein", c: "Wisdom" },
+    { t: "What we think, we become.", a: "Buddha", c: "Wisdom" },
+    { t: "The wound is the place where the light enters you.", a: "Rumi", c: "Life" },
+    { t: "To live is the rarest thing in the world. Most people exist, that is all.", a: "Oscar Wilde", c: "Life" },
+    { t: "Courage is not the absence of fear, but the triumph over it.", a: "Nelson Mandela", c: "Courage" },
+    { t: "A ship in harbor is safe, but that is not what ships are built for.", a: "John A. Shedd", c: "Courage" },
+    { t: "It always seems impossible until it's done.", a: "Nelson Mandela", c: "Success" },
+    { t: "The best way out is always through.", a: "Robert Frost", c: "Life" },
+    { t: "We accept the love we think we deserve.", a: "Stephen Chbosky", c: "Love" },
+    { t: "Love is composed of a single soul inhabiting two bodies.", a: "Aristotle", c: "Love" },
+    { t: "Where there is love there is life.", a: "Mahatma Gandhi", c: "Love" },
+    { t: "I have not failed. I've just found 10,000 ways that won't work.", a: "Thomas Edison", c: "Success" },
+    { t: "The secret of getting ahead is getting started.", a: "Mark Twain", c: "Success" },
+    { t: "Do not go where the path may lead; go instead where there is no path and leave a trail.", a: "Ralph Waldo Emerson", c: "Courage" },
+    { t: "Comedy is simply a funny way of being serious.", a: "Peter Ustinov", c: "Humor" },
+    { t: "Always laugh when you can. It is cheap medicine.", a: "Lord Byron", c: "Humor" },
+    { t: "I can resist everything except temptation.", a: "Oscar Wilde", c: "Humor" },
+    { t: "Creativity takes courage.", a: "Henri Matisse", c: "Creativity" },
+    { t: "Every artist was first an amateur.", a: "Ralph Waldo Emerson", c: "Creativity" },
+    { t: "Imagination is more important than knowledge.", a: "Albert Einstein", c: "Creativity" },
+    { t: "The mind is everything. What you think you become.", a: "Buddha", c: "Wisdom" },
+    { t: "He who has a why to live can bear almost any how.", a: "Friedrich Nietzsche", c: "Wisdom" },
+    { t: "Turn your wounds into wisdom.", a: "Oprah Winfrey", c: "Wisdom" },
+    { t: "Simplicity is the ultimate sophistication.", a: "Leonardo da Vinci", c: "Creativity" },
+    { t: "You must be the change you wish to see in the world.", a: "Mahatma Gandhi", c: "Life" },
+    { t: "The two most important days in your life are the day you are born and the day you find out why.", a: "Mark Twain", c: "Life" },
+    { t: "Fall seven times, stand up eight.", a: "Japanese proverb", c: "Courage" },
+    { t: "A smooth sea never made a skilled sailor.", a: "Franklin D. Roosevelt", c: "Courage" },
+    { t: "Success is not final, failure is not fatal: it is the courage to continue that counts.", a: "Winston Churchill", c: "Success" },
+    { t: "Happiness is not something ready made. It comes from your own actions.", a: "Dalai Lama", c: "Life" },
+    { t: "Between stimulus and response there is a space. In that space is our power to choose.", a: "Viktor Frankl", c: "Wisdom" },
+    { t: "Laughter is timeless, imagination has no age, and dreams are forever.", a: "Walt Disney", c: "Humor" },
+    { t: "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.", a: "Ralph Waldo Emerson", c: "Life" },
+    { t: "The only true wisdom is in knowing you know nothing.", a: "Socrates", c: "Wisdom" }
+  ];
+
+  const categories = ["All", ...Array.from(new Set(quotes.map(q => q.c))).sort()];
+  let filtered = quotes;
+  let idx = 0;
+  let activeCategory = "All";
+  let saved = JSON.parse(localStorage.getItem('commonplace-saved') || '[]');
+  let showingSaved = false;
+
+  const filtersEl = document.getElementById('filters');
+  const quoteBody = document.getElementById('quoteBody');
+  const countEl = document.getElementById('count');
+  const saveBtn = document.getElementById('saveBtn');
+  const toast = document.getElementById('toast');
+
+  function key(q){ return q.t + '|' + q.a; }
+
+  function buildFilters(){
+    filtersEl.innerHTML = '';
+    categories.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (c === activeCategory && !showingSaved ? ' active' : '');
+      chip.textContent = c;
+      chip.onclick = () => { showingSaved = false; setCategory(c); };
+      filtersEl.appendChild(chip);
+    });
+    const savedChip = document.createElement('button');
+    savedChip.className = 'chip' + (showingSaved ? ' active' : '');
+    savedChip.textContent = '♥ Saved (' + saved.length + ')';
+    savedChip.onclick = () => { showingSaved = true; applyFilter(); };
+    filtersEl.appendChild(savedChip);
+  }
+
+  function setCategory(c){
+    activeCategory = c;
+    applyFilter();
+  }
+
+  function applyFilter(){
+    if (showingSaved) {
+      filtered = quotes.filter(q => saved.includes(key(q)));
+    } else if (activeCategory === "All") {
+      filtered = quotes;
+    } else {
+      filtered = quotes.filter(q => q.c === activeCategory);
+    }
+    idx = 0;
+    buildFilters();
+    render();
+  }
+
+  function render(){
+    if (filtered.length === 0){
+      quoteBody.innerHTML = '<div class="empty">Nothing saved yet. <a id="browseLink">Browse all quotes</a></div>';
+      countEl.textContent = '';
+      saveBtn.style.display = 'none';
+      const link = document.getElementById('browseLink');
+      if (link) link.onclick = () => { showingSaved = false; setCategory('All'); };
+      return;
+    }
+    saveBtn.style.display = 'block';
+    const q = filtered[idx];
+    quoteBody.classList.add('swap');
+    setTimeout(() => {
+      quoteBody.innerHTML = '<span class="mark">"</span><blockquote id="quoteText"></blockquote><div class="attribution"><span id="quoteAuthor"></span><span>·</span><span id="quoteCategory"></span></div>';
+      document.getElementById('quoteText').textContent = q.t;
+      document.getElementById('quoteAuthor').textContent = q.a;
+      document.getElementById('quoteCategory').textContent = q.c;
+      countEl.textContent = (idx + 1) + ' / ' + filtered.length;
+      saveBtn.classList.toggle('saved', saved.includes(key(q)));
+      saveBtn.textContent = saved.includes(key(q)) ? '♥' : '♡';
+      quoteBody.classList.remove('swap');
+    }, 110);
+  }
+
+  document.getElementById('prevBtn').onclick = () => {
+    if (!filtered.length) return;
+    idx = (idx - 1 + filtered.length) % filtered.length;
+    render();
+  };
+  document.getElementById('nextBtn').onclick = () => {
+    if (!filtered.length) return;
+    idx = (idx + 1) % filtered.length;
+    render();
+  };
+  document.getElementById('shuffleBtn').onclick = () => {
+    if (!filtered.length) return;
+    let newIdx = idx;
+    if (filtered.length > 1) {
+      while (newIdx === idx) newIdx = Math.floor(Math.random() * filtered.length);
+    }
+    idx = newIdx;
+    render();
+  };
+
+  saveBtn.onclick = () => {
+    if (!filtered.length) return;
+    const q = filtered[idx];
+    const k = key(q);
+    if (saved.includes(k)){
+      saved = saved.filter(s => s !== k);
+      showToast('Removed from saved');
+    } else {
+      saved.push(k);
+      showToast('Saved');
+    }
+    localStorage.setItem('commonplace-saved', JSON.stringify(saved));
+    buildFilters();
+    render();
+  };
+
+  document.getElementById('copyBtn').onclick = () => {
+    if (!filtered.length) return;
+    const q = filtered[idx];
+    const text = '"' + q.t + '" — ' + q.a;
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'))
+      .catch(() => showToast('Could not copy'));
+  };
+
+  document.getElementById('shareBtn').onclick = () => {
+    if (!filtered.length) return;
+    const q = filtered[idx];
+    const text = '"' + q.t + '" — ' + q.a;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => showToast('Copied — paste it anywhere'))
+        .catch(() => showToast('Could not share'));
+    }
+  };
+
+  let toastTimer;
+  function showToast(msg){
+    clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+  }
+
+  buildFilters();
+  render();
+})();
+</script>
+
+</body>
+</html>
